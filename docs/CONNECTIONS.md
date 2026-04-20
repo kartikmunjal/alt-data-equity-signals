@@ -53,6 +53,30 @@ Recommended additions to `securities-lending`:
 
 This turns the securities-lending repo into a broader crowding and dislocation research platform.
 
+Implemented connection:
+
+- `securities-lending/src/securities_lending/features/retail_attention.py`
+  loads `WSB_*.parquet` panels and converts them to the repo's long feature
+  frame: `date, symbol, wsb_*`.
+- `securities-lending/scripts/run_analysis.py --alt-factor-dir ...` merges
+  retail-attention features into the existing short-interest feature panel.
+- The analysis includes standalone WSB signals and interaction features:
+  - `borrow_stress_x_wsb_attention`
+  - `dtc_x_wsb_attention`
+  - `short_pressure_x_wsb_sentiment`
+- `securities-lending/src/securities_lending/models/squeeze_detector.py`
+  treats those WSB columns as optional model features when present.
+
+Run:
+
+```bash
+cd ../securities-lending
+python scripts/run_analysis.py \
+  --features data/processed/features.parquet \
+  --alt-factor-dir ../alt-data-equity-signals/results/wsb_retail_attention/factor_panels \
+  --output-dir data/results/with_retail_attention
+```
+
 ## Downstream Connection: HFT-trades-local
 
 The HFT/bar-ML repo is not the right home for the research, but it is a useful downstream test:
