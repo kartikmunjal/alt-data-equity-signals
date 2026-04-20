@@ -16,6 +16,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Alternative-data equity signal research")
     parser.add_argument("--posts", help="CSV/JSONL/Parquet WSB posts or comments export")
     parser.add_argument("--prices", help="CSV/Parquet date x ticker close-price panel")
+    parser.add_argument("--web-traffic", help="CSV/Parquet monthly web traffic: date,ticker,visits")
     parser.add_argument("--tickers", nargs="+", help="Universe for yfinance download and extraction")
     parser.add_argument("--start", default="2021-01-01")
     parser.add_argument("--end", default=None)
@@ -27,6 +28,7 @@ def main() -> None:
     outputs = run_pipeline(
         posts_path=args.posts,
         prices_path=args.prices,
+        web_traffic_path=args.web_traffic,
         tickers=args.tickers,
         start=args.start,
         end=args.end,

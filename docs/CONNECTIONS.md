@@ -9,14 +9,17 @@ signal_panel: pd.DataFrame      # index=date, columns=ticker
 return_panel: pd.DataFrame      # index=date, columns=ticker
 ```
 
-That makes `mention_z`, `sentiment_z`, and `attention_shock_z` drop-in peers to traditional factors such as momentum, idiosyncratic volatility, value, and quality.
+That makes WSB social signals and web-traffic operational signals drop-in peers to traditional factors such as momentum, idiosyncratic volatility, value, and quality.
 
 Recommended integration path:
 
 1. Export signal panels from this repo:
 
    ```bash
-   python scripts/run_pipeline.py --posts data/raw/wsb_posts.csv --prices data/raw/close.parquet
+   python scripts/run_pipeline.py \
+     --posts data/raw/wsb_posts.csv \
+     --web-traffic data/raw/monthly_web_traffic.csv \
+     --prices data/raw/close.parquet
    ```
 
 2. Copy or symlink `results/signal_*.parquet` into the factor research repo under `data/alt/`.
@@ -28,6 +31,9 @@ Recommended integration path:
    - `WSB_MENTION_Z`
    - `WSB_SENTIMENT_Z`
    - `WSB_ATTENTION_SHOCK_Z`
+   - `WSB_WEB_TRAFFIC_LEVEL_Z`
+   - `WSB_WEB_TRAFFIC_GROWTH_Z`
+   - `WSB_WEB_TRAFFIC_SHOCK_Z`
 
 5. Run the existing factor pipeline with the alt-data factors included in the same IC, Fama-MacBeth, and quintile workflow.
 
@@ -66,6 +72,9 @@ Implemented connection:
   - `short_pressure_x_wsb_sentiment`
 - `securities-lending/src/securities_lending/models/squeeze_detector.py`
   treats those WSB columns as optional model features when present.
+- `securities-lending/scripts/run_retail_squeeze_backtest.py` reports a compact
+  long-short spread, Sharpe, hit rate, and top-bucket hit rate for the
+  crowded-short x retail-attention interaction thesis.
 
 Run:
 
@@ -75,6 +84,15 @@ python scripts/run_analysis.py \
   --features data/processed/features.parquet \
   --alt-factor-dir ../alt-data-equity-signals/results/wsb_retail_attention/factor_panels \
   --output-dir data/results/with_retail_attention
+```
+
+Dedicated interaction backtest:
+
+```bash
+python scripts/run_retail_squeeze_backtest.py \
+  --features data/processed/features.parquet \
+  --alt-factor-dir ../alt-data-equity-signals/results/wsb_retail_attention/factor_panels \
+  --signal borrow_stress_x_wsb_attention
 ```
 
 ## Downstream Connection: HFT-trades-local

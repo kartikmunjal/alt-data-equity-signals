@@ -11,7 +11,7 @@ def make_synthetic_altdata(
     n_days: int = 90,
     tickers: list[str] | None = None,
     seed: int = 7,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Create WSB-like posts and close prices with a weak embedded attention signal."""
     rng = np.random.default_rng(seed)
     tickers = tickers or [
@@ -63,5 +63,23 @@ def make_synthetic_altdata(
                     }
                 )
 
+    traffic_rows = []
+    month_ends = pd.date_range(dates.min(), dates.max(), freq="ME")
+    for month_end in month_ends:
+        month_ix = dates.get_indexer([dates[dates <= month_end][-1]])[0]
+        for ticker in tickers:
+            base_visits = 1_000_000 + 150_000 * tickers.index(ticker)
+            attention_boost = max(0.0, attention.loc[dates[month_ix], ticker]) * 75_000
+            noise = rng.normal(0, 50_000)
+            traffic_rows.append(
+                {
+                    "date": month_end,
+                    "ticker": ticker,
+                    "visits": max(10_000, base_visits + attention_boost + noise),
+                    "source": "synthetic_similarweb",
+                }
+            )
+
     posts = pd.DataFrame(rows).sort_values("created_utc").reset_index(drop=True)
-    return posts, close
+    web_traffic = pd.DataFrame(traffic_rows)
+    return posts, close, web_traffic

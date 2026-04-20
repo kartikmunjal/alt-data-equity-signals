@@ -110,10 +110,26 @@ def run_fama_macbeth_table(
     """Run Fama-MacBeth for every signal and return one row per signal slope."""
     rows = []
     for name, panel in signals.items():
-        model = FamaMacBeth(nw_lags=nw_lags, min_stocks=min_stocks).fit(panel, returns, controls)
+        try:
+            model = FamaMacBeth(nw_lags=nw_lags, min_stocks=min_stocks).fit(panel, returns, controls)
+        except ValueError:
+            continue
         row = model.summary().loc["signal"].to_dict()
         row["signal"] = name
         rows.append(row)
+    if not rows:
+        return pd.DataFrame(
+            columns=[
+                "mean_lambda",
+                "std_lambda",
+                "t_stat_fm",
+                "t_stat_nw",
+                "p_value_nw",
+                "significant",
+                "mean_r2",
+                "n_periods",
+            ]
+        )
     return pd.DataFrame(rows).set_index("signal").sort_values("t_stat_nw", key=abs, ascending=False)
 
 

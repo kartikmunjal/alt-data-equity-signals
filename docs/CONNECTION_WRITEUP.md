@@ -18,6 +18,11 @@ alt-data-equity-signals/results/<run>/factor_panels/
 Each file is `date x ticker`, which is the shared contract across all connected
 research code.
 
+The alt-data repo now covers two source types:
+
+- social attention: WSB ticker mentions, sentiment, and abnormal attention
+- operational data: monthly web traffic level, growth, and abnormal traffic
+
 ## Connection 1: Cross-Sectional-Factor-Research
 
 **Purpose:** compare alt-data factors directly against traditional equity
@@ -31,6 +36,9 @@ Implemented connection:
   - `WSB_MENTION_Z`
   - `WSB_SENTIMENT_Z`
   - `WSB_ATTENTION_SHOCK_Z`
+  - `WSB_WEB_TRAFFIC_LEVEL_Z`
+  - `WSB_WEB_TRAFFIC_GROWTH_Z`
+  - `WSB_WEB_TRAFFIC_SHOCK_Z`
 - Added `docs/ALT_DATA_CONNECTION.md`.
 
 Workflow:
@@ -50,8 +58,8 @@ python scripts/run_full_pipeline.py \
 
 Research question:
 
-> Does retail attention add predictive power versus momentum, volatility, value,
-> quality, and liquidity factors?
+> Do retail attention and operational web traffic add predictive power versus
+> momentum, volatility, value, quality, and liquidity factors?
 
 ## Connection 2: securities-lending
 
@@ -70,6 +78,8 @@ Implemented connection:
   - `dtc_x_wsb_attention`
   - `short_pressure_x_wsb_sentiment`
 - Extended the squeeze detector to use WSB features when present.
+- Added a dedicated interaction backtest that reports annualized spread,
+  Sharpe, hit rate, and top-bucket event hit rate.
 - Added `docs/ALT_DATA_CONNECTION.md`.
 
 Workflow:
@@ -80,6 +90,15 @@ python scripts/run_analysis.py \
   --features data/processed/features.parquet \
   --alt-factor-dir ../alt-data-equity-signals/results/wsb_retail_attention/factor_panels \
   --output-dir data/results/with_retail_attention
+```
+
+Dedicated interaction backtest:
+
+```bash
+python scripts/run_retail_squeeze_backtest.py \
+  --features data/processed/features.parquet \
+  --alt-factor-dir ../alt-data-equity-signals/results/wsb_retail_attention/factor_panels \
+  --signal borrow_stress_x_wsb_attention
 ```
 
 Research question:

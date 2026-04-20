@@ -12,8 +12,10 @@ from altdata_equity_signals.analytics.portfolio_sorts import quintile_returns
 from altdata_equity_signals.analytics.returns import compute_forward_returns
 from altdata_equity_signals.data.synthetic import make_synthetic_altdata
 from altdata_equity_signals.features.panels import build_wsb_signal_panels
+from altdata_equity_signals.features.web_traffic import build_web_traffic_signal_panels
 from altdata_equity_signals.ingestion.prices import download_close_panel, load_close_panel
 from altdata_equity_signals.ingestion.wsb import load_wsb_posts
+from altdata_equity_signals.ingestion.web_traffic import load_web_traffic
 from altdata_equity_signals.integration import export_factor_panels
 
 
@@ -21,6 +23,7 @@ def run_pipeline(
     *,
     posts_path: str | Path | None = None,
     prices_path: str | Path | None = None,
+    web_traffic_path: str | Path | None = None,
     tickers: list[str] | None = None,
     start: str = "2021-01-01",
     end: str | None = None,
@@ -35,7 +38,7 @@ def run_pipeline(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if use_synthetic:
-        posts, close = make_synthetic_altdata()
+        posts, close, synthetic_web_traffic = make_synthetic_altdata()
         universe = list(close.columns)
     else:
         if posts_path is None:
@@ -48,8 +51,18 @@ def run_pipeline(
                 raise ValueError("tickers are required when prices_path is not supplied")
             close = download_close_panel(tickers, start=start, end=end)
         universe = tickers or list(close.columns)
+        synthetic_web_traffic = None
 
     signals = build_wsb_signal_panels(posts, universe=universe)
+    if web_traffic_path is not None or synthetic_web_traffic is not None:
+        web_traffic = synthetic_web_traffic if synthetic_web_traffic is not None else load_web_traffic(web_traffic_path)
+        signals.update(
+            build_web_traffic_signal_panels(
+                web_traffic,
+                universe=universe,
+                daily_index=close.index,
+            )
+        )
     forward_returns = compute_forward_returns(close, horizons)
 
     ic_table = compute_ic_table(signals, forward_returns, min_stocks=min_stocks)

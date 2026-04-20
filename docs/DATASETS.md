@@ -1,6 +1,6 @@
 # Public Dataset Options
 
-## Implemented First: Reddit WallStreetBets
+## Implemented: Reddit WallStreetBets
 
 Good public starting points:
 
@@ -17,6 +17,31 @@ Expected columns:
 | `body` | no | Used when present, common for comments |
 
 At least one of `title`, `selftext`, or `body` must exist.
+
+## Implemented: SimilarWeb-Style Web Traffic
+
+Implemented as a generic monthly web-traffic loader.
+
+Expected columns:
+
+| Column | Required | Notes |
+|---|---:|---|
+| `date` | yes | month or month-end date |
+| `ticker` | yes | mapped public company ticker |
+| `visits` | yes | monthly visits or comparable traffic metric |
+| `source` | no | vendor/source label |
+| `domain` | no | original mapped domain |
+
+Signals:
+
+- traffic level
+- month-over-month traffic growth
+- abnormal traffic shock versus trailing baseline
+
+Research framing:
+
+> Does web traffic predict future returns, revenue surprises, or analyst
+> estimate revisions for consumer internet and e-commerce stocks?
 
 ## Price Data
 
