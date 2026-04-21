@@ -251,3 +251,14 @@ available locally and the public free tiers generally require account/API access
 provide rank-style endpoints rather than ticker-level history.
 
 See [docs/DATASETS.md](docs/DATASETS.md) for public dataset options and schema expectations, and [docs/VENDOR_EVALUATION.md](docs/VENDOR_EVALUATION.md) for the data-quality and vendor diligence framework.
+
+Additional research write-ups:
+
+- [Retail attention investment memo](docs/INVESTMENT_MEMO_RETAIL_ATTENTION.md):
+  non-technical question/data/finding/implication/caveats write-up for the real
+  WSB result.
+- [Web traffic and revenue surprise study design](docs/WEB_TRAFFIC_REVENUE_SURPRISE_STUDY.md):
+  the operational alt-data extension needed to test whether traffic predicts
+  revenue surprises.
+- [Tech and consumer sector notes](docs/TECH_CONSUMER_SECTOR_NOTES.md):
+  segment-specific framing for e-commerce, marketplaces, social, streaming, and SaaS.
