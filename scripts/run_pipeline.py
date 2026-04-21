@@ -22,6 +22,7 @@ def main() -> None:
     parser.add_argument("--end", default=None)
     parser.add_argument("--horizons", nargs="+", type=int, default=[1, 5, 10, 21])
     parser.add_argument("--out", default="results")
+    parser.add_argument("--min-stocks", type=int, default=10)
     parser.add_argument("--synthetic", action="store_true", help="Run deterministic synthetic demo")
     args = parser.parse_args()
 
@@ -35,6 +36,7 @@ def main() -> None:
         horizons=args.horizons,
         output_dir=args.out,
         use_synthetic=args.synthetic,
+        min_stocks=args.min_stocks,
     )
 
     print("\nIC SUMMARY")
