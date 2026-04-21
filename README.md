@@ -59,7 +59,95 @@ pytest -q
 
 ## Real Data Example
 
-Download a public WSB dataset, for example a Kaggle/Pushshift export with columns such as `created_utc`, `title`, `selftext`, or `body`.
+The repo has been run on the free MIT-licensed Figshare dataset
+[Wallstreetbets Reddit Data (10/2020 - 04/2022)](https://figshare.com/articles/dataset/Wallstreetbets_Reddit_Data_10_2020_-_04_2022_/22010699)
+plus free Yahoo/yfinance prices.
+
+```bash
+python scripts/prepare_figshare_wsb.py \
+  --root data/raw/free_sources/extracted \
+  --out data/processed/figshare_wsb_posts.parquet \
+  --start 2020-10-01 \
+  --end 2022-04-30
+
+python scripts/run_pipeline.py \
+  --posts data/processed/figshare_wsb_posts.parquet \
+  --tickers GME AMC AAPL MSFT NOK TSLA \
+  --start 2020-10-01 \
+  --end 2022-05-31 \
+  --min-stocks 3 \
+  --out results/real_figshare_wsb
+```
+
+That run used **229,638** real WSB rows from **2020-10-01 to 2022-04-29** across
+`AAPL`, `AMC`, `GME`, `MSFT`, `NOK`, and `TSLA`.
+
+### Actual Real-Data Results
+
+Output directory: `results/real_figshare_wsb/`
+
+| Signal | Horizon | Mean IC | ICIR | t-stat | BH p-value | Periods | Interpretation |
+|---|---:|---:|---:|---:|---:|---:|---|
+| `mention_z` | 10d | -0.0876 | -0.1737 | -3.40 | 0.0088 | 384 | higher WSB mention intensity predicted underperformance |
+| `mention_z` | 21d | -0.0709 | -0.1290 | -2.52 | 0.0720 | 383 | negative after FDR, weaker than 10d |
+| `attention_shock_z` | 5d | 0.0340 | 0.0693 | 1.35 | 0.3531 | 382 | not significant |
+| `sentiment_z` | 1d | 0.0514 | 0.0897 | 1.55 | 0.2955 | 297 | not significant |
+
+Fama-MacBeth on the standalone alt-data repo did **not** find a Newey-West significant
+WSB coefficient:
+
+| Signal | Mean Lambda | NW t-stat | p-value | Periods |
+|---|---:|---:|---:|---:|
+| `sentiment_z` | -0.0174 | -1.43 | 0.1537 | 298 |
+| `mention_z` | 0.0138 | 1.31 | 0.1919 | 384 |
+| `attention_shock_z` | 0.0132 | 1.28 | 0.2024 | 382 |
+
+The full-universe quintile sort selected the best ICIR signal and produced a positive
+5-day `Q5-Q1` spread of **0.0501**, but this is dominated by the meme-stock sample
+and should not be read as a production portfolio result.
+
+### GME/AMC Sensitivity
+
+I also reran the same pipeline excluding the two most event-driven meme names:
+
+```bash
+python scripts/run_pipeline.py \
+  --posts data/processed/figshare_wsb_posts.parquet \
+  --prices data/processed/close_figshare_universe.parquet \
+  --tickers AAPL MSFT NOK TSLA \
+  --min-stocks 3 \
+  --out results/real_figshare_wsb_ex_gme_amc
+```
+
+Result: the WSB effect weakens materially. `mention_z` at 21 days remains negative
+but only marginal (`mean_ic=-0.0695`, `ICIR=-0.1045`, `p=0.0502`, BH p-value
+`0.6019`). `attention_shock_z` flips positive at 21 days (`mean_ic=0.0255`) and is
+not significant. This confirms the six-name WSB run is narrow and heavily influenced
+by the GME/AMC episode.
+
+### Investment Thesis From The Result
+
+The strongest real-data finding is contrarian: abnormal retail attention and high WSB
+mention intensity are associated with later underperformance, especially around the
+10- to 21-day horizon. A plausible thesis is that retail attention temporarily inflates
+prices, after which crowded attention mean-reverts. This is consistent with the investor
+attention literature, including Da, Engelberg, and Gao (2011), but this repo treats it
+as a research hypothesis rather than a tradable strategy because the current public
+sample is small and event-biased.
+
+### Point-In-Time Status
+
+WSB signals are timestamped from Reddit `created_utc` values and aggregated by calendar
+date. The current reported runs align signal date `T` with forward close-to-close returns
+from `T` to `T+h`, so they are **research diagnostics, not production execution results**.
+The intended production convention is: compute the signal after market close on date `T`,
+first trade at the next session, and evaluate returns from `T+1` onward. A next-session
+execution lag should be enforced before treating these ICs as tradable.
+
+### Generic WSB CSV Example
+
+For another public WSB dataset, use columns such as `created_utc`, `title`, `selftext`,
+or `body`.
 
 ```bash
 python scripts/run_pipeline.py \
@@ -156,5 +244,10 @@ See [docs/CONNECTIONS.md](docs/CONNECTIONS.md) for the integration plan.
 ## Data Notes
 
 The repository does not commit raw Reddit or price data. Put local data under `data/raw/`; outputs go under `results/`.
+
+The web-traffic feature code and schema are implemented, but I did **not** run a real
+Similarweb/web-traffic result because no free bulk historical monthly traffic file was
+available locally and the public free tiers generally require account/API access or
+provide rank-style endpoints rather than ticker-level history.
 
 See [docs/DATASETS.md](docs/DATASETS.md) for public dataset options and schema expectations, and [docs/VENDOR_EVALUATION.md](docs/VENDOR_EVALUATION.md) for the data-quality and vendor diligence framework.
