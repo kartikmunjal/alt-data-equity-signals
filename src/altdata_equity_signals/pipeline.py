@@ -8,6 +8,7 @@ import pandas as pd
 
 from altdata_equity_signals.analytics.fama_macbeth import run_fama_macbeth_table
 from altdata_equity_signals.analytics.ic_analysis import compute_ic_table
+from altdata_equity_signals.analytics.plots import plot_research_summary
 from altdata_equity_signals.analytics.portfolio_sorts import quintile_returns
 from altdata_equity_signals.analytics.returns import compute_forward_returns
 from altdata_equity_signals.data.synthetic import make_synthetic_altdata
@@ -86,6 +87,7 @@ def run_pipeline(
     for name, panel in signals.items():
         panel.to_parquet(output_dir / f"signal_{name}.parquet")
     export_factor_panels(signals, output_dir / "factor_panels")
+    plot_research_summary(ic_table, fm_table, quintiles, output_dir / "figures" / "altdata_summary.png")
 
     return {
         "ic": ic_table,
